@@ -43,8 +43,8 @@ def images_to_video(image_folder, output_video_path, frame_rate=30):
     print(f"视频已保存到 {output_video_path}")
 
 # 使用示例
-image_folder = '/mnt/jrwbxx/yolo11/dataset/2024'  # 替换为包含图像的文件夹路径
-output_video_path = '/mnt/jrwbxx/yolo11/S_and_T.mp4'  # 替换为输出视频的路径
+image_folder = '/mnt/jrwbxx/yolo11/persontre'  # 替换为包含图像的文件夹路径
+output_video_path = '/mnt/jrwbxx/yolo11/1.mp4'  # 替换为输出视频的路径
 
 # 调用函数转换图像为视频
 images_to_video(image_folder, output_video_path, frame_rate=1) #自己修改帧率

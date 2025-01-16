@@ -173,5 +173,5 @@ def check_iou_between_person_and_targets(video_path):
 
 if __name__ == '__main__':
 
-    video_path = '/mnt/jrwbxx/yolo11/s_and_t_1_12.mp4'  # 输入你的视频路径
+    video_path = '/mnt/jrwbxx/yolo11/1.mp4'  # 输入你的视频路径
     check_iou_between_person_and_targets(video_path)
