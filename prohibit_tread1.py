@@ -54,10 +54,10 @@ def check_cls4_overlap(person_box, target_box, cls4_boxes):
 
     target_area = (min_x, min_y, max_x, max_y)  # 交集区域
 
-    max_overlap_ratio = None  # 用于存储最大的重叠比率
-    best_inter_x1 = None  # 用于存储最大重叠比率对应的交集坐标
-    best_inter_y1 = None
-    best_cls4_box = None  # 用于存储对应的 cls4 框
+    max_overlap_ratio = 0  # 用于存储最大的重叠比率
+    best_inter_x1 = 0  # 用于存储最大重叠比率对应的交集坐标
+    best_inter_y1 = 0
+    best_cls4_box = 0  # 用于存储对应的 cls4 框
 
     # 检查是否有 cls4 物体在交集区域内
     for cls4_box in cls4_boxes:
@@ -78,7 +78,7 @@ def check_cls4_overlap(person_box, target_box, cls4_boxes):
             overlap_ratio = intersection_area / cls4_area
 
             # 更新最大重叠比率及其相关信息
-            if max_overlap_ratio is None or overlap_ratio > max_overlap_ratio:
+            if max_overlap_ratio == 0 or overlap_ratio > max_overlap_ratio:
                 max_overlap_ratio = overlap_ratio
                 best_inter_x1 = inter_x1
                 best_inter_y1 = inter_y1
@@ -89,7 +89,7 @@ def check_cls4_overlap(person_box, target_box, cls4_boxes):
 
 def check_iou_between_person_and_targets(video_path):
     model = YOLO('/mnt/jrwbxx/yolo11/runs/detect/train5/weights/12_24_sit_and_tread.pt')
-    target_classes = [1, 2]  # bag, box  针对1 2多一层处理
+    #target_classes = [1, 2]  # bag, box  针对1 2多一层处理 不需要识别它了
     cls3 =3 #对cart单独一类
     cls4 = 4  # 新增加的类别编号（假设为 4）
 
@@ -98,7 +98,9 @@ def check_iou_between_person_and_targets(video_path):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", current_time)
 
     # 输出目录
-    # output_dir = '/mnt/jrwbxx/yolo11/output_sit_and_tread'
+    #保存我想要的输出 项目不需要
+    output_file = "mnt/jrwbxx/yolo11/outfile.txt"
+    output_dir = '/mnt/jrwbxx/yolo11/output_sit_and_tread'
     output_dir1 = '/mnt/jrwbxx/yolo11/experience1'
     if not os.path.exists(output_dir1):
         os.makedirs(output_dir1, exist_ok=True)
@@ -126,7 +128,6 @@ def check_iou_between_person_and_targets(video_path):
             boxes = results[0].boxes
 
             person_boxes = []
-            target_boxes = []
             cls3_boxes = []
             cls4_boxes = []
 
@@ -135,13 +136,9 @@ def check_iou_between_person_and_targets(video_path):
                 cls = int(boxes.cls[i].item())
                 con = boxes.conf[i].item()
 
-                if cls == 0 and con > 0.1:  # 如果是 "person" 类别  先把对应类别添加上去
+                if cls == 0 and con > 0.1:  # 如果是 "person" 类别  先把对应类别添加上去  先把每一个识别物体输入上去
                     x1, y1, x2, y2 = boxes.xyxy[i].tolist()
                     person_boxes.append([x1, y1, x2, y2])
-
-                if cls in target_classes and con > 0.1:  # 目标类别（bag, box
-                    x1, y1, x2, y2 = boxes.xyxy[i].tolist()
-                    target_boxes.append([x1, y1, x2, y2])
 
                 if cls == cls3 and con > 0.1:  # 目标类别 cart
                     x1, y1, x2, y2 = boxes.xyxy[i].tolist()
@@ -151,28 +148,33 @@ def check_iou_between_person_and_targets(video_path):
                     x1, y1, x2, y2 = boxes.xyxy[i].tolist()
                     cls4_boxes.append([x1, y1, x2, y2])
 
-                    # img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) #注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数 需要转换
-                    #
-                    # # 创建绘图上下文
-                    # draw = ImageDraw.Draw(img) #实验一下 能不能检测到
-                    #
-                    # # 继续进行绘制操作
-                    # for i, person_box in enumerate(person_boxes):
-                    #     for j, target_box in enumerate(target_boxes):
-                    #         for cls4_box in cls4_boxes:
-                    # # 绘制 "person" 类别框
-                    #             draw.rectangle([person_box[0], person_box[1], person_box[2], person_box[3]],
-                    #                            outline="red", width=3)
-                    #
-                    #             # 绘制目标框（bag, box, cart）
-                    #             draw.rectangle([target_box[0], target_box[1], target_box[2], target_box[3]],
-                    #                            outline="blue", width=3)
-                    #
-                    #             # 绘制 cls 4 类别框
-                    #             draw.rectangle([cls4_box[0], cls4_box[1], cls4_box[2], cls4_box[3]],
-                    #                            outline="green", width=3)
-                    #             saved_image_path = os.path.join(output_dir, f"{frame_idx}_detected.jpg")
-                    #             img.save(saved_image_path)
+                # img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) #注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数
+                #  注意这部分逻辑要改 因为我加了一个目标
+                #
+                #
+                # # 创建绘图上下文
+                # draw = ImageDraw.Draw(img) #实验一下 能不能检测到
+                #
+                # # 继续进行绘制操作
+                # for i, person_box in enumerate(person_boxes):
+                #     for j, target_box in enumerate(target_boxes):
+                #         for cls4_box in cls4_boxes:
+                #             print(frame1) #有点奇怪  为什么有些没有被识别到
+                # # 绘制 "person" 类别框
+                #             draw.rectangle([person_box[0], person_box[1], person_box[2], person_box[3]],
+                #                            outline="red", width=3)
+                #
+                #             # 绘制目标框（bag, box, cart）
+                #             draw.rectangle([target_box[0], target_box[1], target_box[2], target_box[3]],
+                #                            outline="blue", width=3)
+                #
+                #             # 绘制 cls 4 类别框
+                #             draw.rectangle([cls4_box[0], cls4_box[1], cls4_box[2], cls4_box[3]],
+                #                            outline="green", width=3)
+                #             saved_image_path = os.path.join(output_dir, f"{frame1}_detected.jpg")
+                #             img.save(saved_image_path)
+                #             print("输出保存的路径",saved_image_path)
+                # frame1 = frame1+1
 
             # 如果检测到 "person" 类别和目标框，计算IoU
             if person_boxes and cls3_boxes: # 对每一个都进行计算 哪一个成功就输出哪一个 先统计车子 看看有没有报警 车子不考虑高度
@@ -182,20 +184,51 @@ def check_iou_between_person_and_targets(video_path):
 
                         # 判断目标框的中心点是否在person框的下方
                             iou = calculate_iou(person_box, cls3_box)
+                         # 踩的逻辑 一个是要求车子和人有交并比 其次判断脚是不是在这个交并比内 并且比重不能太低
+                            if iou > 0.2: # 用来判断坐 如果iou足够高 就视为是坐
+                                # 加载图像并绘制标注
+                                # 看看这个值大概有多少 好衡量一下
+                                with open(output_file, "w", encoding="utf-8") as file:
+                                    file.write(f"这个iou大于0.2的 这是第{frame_idx}\n")  # 写入介绍
+                                    file.write(iou)
 
-                            if iou > 0:  # IoU大于0，进入新的判断
+                                img = Image.fromarray(cv2.cvtColor(frame,
+                                                                   cv2.COLOR_BGR2RGB))  # 注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数 需要转换
+
+                                # 创建绘图上下文
+                                draw = ImageDraw.Draw(img)
+
+                                # 继续进行绘制操作
+
+                                # 绘制 "person" 类别框
+                                draw.rectangle([person_box[0], person_box[1], person_box[2], person_box[3]],
+                                               outline="red", width=3)
+
+                                # 绘制目标框（bag, box, cart）
+                                draw.rectangle([cls3_box[0], cls3_box[1], cls3_box[2], cls3_box[3]],
+                                               outline="blue", width=3)
+
+                                # 绘制 cls 4 类别框
+                                # draw.rectangle([cls4_box[0], cls4_box[1], cls4_box[2], cls4_box[3]],
+                                #                outline="green", width=3)
+                                # 保存标注后的图像
+                                saved_image_path = os.path.join(output_dir1,
+                                                                f"{timestamp}_{frame_idx}_detected.jpg")
+                                img.save(saved_image_path)
+                                print(f"{saved_image_path}")
+                            elif iou > 0 :  # IoU大于0，进入新的判断
                                 # 创建一个包围person和target框的区域 本来思路是判断脚是否在这个大框框里面 但是这个不合理 应该判断脚是不是在这个交集里面，再检测脚和人与物交集有没有交集
 
-                                overlap_ratio ,inter_xy, best_cls4_box=  check_cls4_overlap(person_box,cls3_box,cls4_boxes)
+                                overlap_ratio, inter_xy, best_cls4_box = check_cls4_overlap(person_box, cls3_box,cls4_boxes)
 
-                                inter_x1 ,inter_y1 = inter_xy
+                                inter_x1, inter_y1 = inter_xy
 
                                 # 如果占比大于某个阈值，可以执行进一步的操作
-                                if overlap_ratio > 0.2:
+                                if overlap_ratio > 0.2:  # 暂定0.2 可以增加
 
                                     # 加载图像并绘制标注
 
-                                    img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) #注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数 需要转换
+                                    img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))  # 注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数 需要转换
 
                                     # 创建绘图上下文
                                     draw = ImageDraw.Draw(img)
@@ -207,60 +240,12 @@ def check_iou_between_person_and_targets(video_path):
                                                    outline="red", width=3)
 
                                     # 绘制目标框（bag, box, cart）
-                                    draw.rectangle([target_box[0], target_box[1], target_box[2], target_box[3]],
+                                    draw.rectangle([cls3_box[0], cls3_box[1], cls3_box[2], cls3_box[3]],
                                                    outline="blue", width=3)
 
                                     # 绘制 cls 4 类别框
                                     # draw.rectangle([cls4_box[0], cls4_box[1], cls4_box[2], cls4_box[3]],
                                     #                outline="green", width=3)
-                                    # 在框附近绘制 IOU 的值
-                                    font = ImageFont.load_default()  # 使用默认字体
-                                    text = f"IOU: {overlap_ratio:.2f}"
-                                    text_position = ( inter_x1,  inter_y1)  # 在框的上方显示 IOU 值
-                                    draw.text(text_position, text, fill="yellow", font=font)
-                                    # 保存标注后的图像
-                                    saved_image_path = os.path.join(output_dir1, f"{timestamp}_{frame_idx}_detected.jpg")
-                                    img.save(saved_image_path)
-                                    print(f"{saved_image_path}")
-
-            if person_boxes and target_boxes:
-                for i, person_box in enumerate(person_boxes):
-                    person_center_y = (person_box[1] + person_box[3]) / 2
-
-                    for j, target_box in enumerate(target_boxes):
-                        target_center_y = (target_box[1] + target_box[3]) / 2
-
-                        if person_center_y - 20 > target_center_y:  # 人应该要在这个目标物体的上面
-                            iou = calculate_iou(person_box, target_box)
-
-                            if iou > 0:  # IoU大于0，进入新的判断
-                                # 创建一个包围person和target框的区域 本来思路是判断脚是否在这个大框框里面 但是这个不合理 应该判断脚是不是在这个交集里面，再检测脚和人与物交集有没有交集
-
-                                overlap_ratio, inter_xy, best_cls4_box = check_cls4_overlap(person_box, target_box,cls4_boxes)
-
-                                inter_x1, inter_y1 = inter_xy
-
-
-                                # 如果占比大于某个阈值，可以执行进一步的操作
-                                if overlap_ratio > 0.2:
-                                    img = Image.fromarray(cv2.cvtColor(frame,cv2.COLOR_BGR2RGB))  # 注意 cap.read 获取到的帧是numpy形式 不能直接配合Draw函数 需要转换
-
-                                    # 创建绘图上下文
-                                    draw = ImageDraw.Draw(img)
-
-                                    # 继续进行绘制操作
-
-                                    # 绘制 "person" 类别框
-                                    draw.rectangle([person_box[0], person_box[1], person_box[2], person_box[3]],
-                                                   outline="red", width=3)
-
-                                    # 绘制目标框（bag, box, cart）
-                                    draw.rectangle([target_box[0], target_box[1], target_box[2], target_box[3]],
-                                                   outline="blue", width=3)
-
-                                    # 绘制 cls 4 类别框
-                                    draw.rectangle([best_cls4_box[0], best_cls4_box[1], best_cls4_box[2], best_cls4_box[3]],
-                                                   outline="green", width=3)
                                     # 在框附近绘制 IOU 的值
                                     font = ImageFont.load_default()  # 使用默认字体
                                     text = f"IOU: {overlap_ratio:.2f}"
@@ -271,6 +256,8 @@ def check_iou_between_person_and_targets(video_path):
                                                                     f"{timestamp}_{frame_idx}_detected.jpg")
                                     img.save(saved_image_path)
                                     print(f"{saved_image_path}")
+
+
 
         frame_idx += 1
     cap.release()
